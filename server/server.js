@@ -19,12 +19,26 @@ var users = new Users();
 app.use(express.static(publicPath));
 
 io.on('connection', (socket) => {
-    console.log('New user connected');
+    socket.on('getRoomList', (callback) => {
+        var rooms = users.getRooms();
+        callback(rooms);
+    });
 
     socket.on('join', (params, callback) => {
         if (!isRealString(params.name) || !isRealString(params.room)) {
             return callback('Name and room name required');
         } else {
+            // 1st Challenge: Save all room names as lowercase
+            params.room = params.room.toLowerCase()
+
+            // 2nd Challenge: Not repeated user names
+            var userList = users.getUserList(params.room);
+            var usersName = userList.filter(userName => {
+                return params.name === userName;
+            });
+            if (usersName.length > 0) {
+                return callback('Name already choosen. Please try another')
+            }
             users.removeUser(socket.id);
             socket.join(params.room);
             users.addUser(socket.id, params.name, params.room);
@@ -33,6 +47,7 @@ io.on('connection', (socket) => {
             socket.emit('newMessage', generateMessage('Admin', 'Welcome to the chat app'));
             socket.broadcast.to(params.room).emit('newMessage', generateMessage('Admin', `${params.name} has joined`));
             callback();
+
         }
     })
 

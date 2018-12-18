@@ -43,6 +43,20 @@ class Users {
 
         return namesArray;
     }
+
+    getRooms () {
+        var roomsArray = [];
+
+        this.users.forEach(user => {
+            roomsArray.push(user.room)
+        });
+
+        var uniqueRoomsArray = roomsArray.filter(function(item, pos) {
+            return roomsArray.indexOf(item) == pos;
+        })
+
+        return uniqueRoomsArray;
+    }
 }
 
 module.exports = {Users}
